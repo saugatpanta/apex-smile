@@ -5,8 +5,11 @@ class RegistrationForm {
             formData: { inter: {}, intra: {} },
             currentRegistration: null
         };
+        
+        // Use environment variable for script URL
+        this.scriptUrl = 'https://script.google.com/macros/s/AKfycbx9GXZ0ft6orTXKIcSV-6ocbnStGAVhbxOs4w40hpII8bcvkjZTbkIrL_GJuxlE10DLow/exec';
+        
         this.init();
-        this.scriptUrl = process.env.NEXT_PUBLIC_SCRIPT_URL;
     }
 
     init() {
@@ -14,6 +17,55 @@ class RegistrationForm {
         this.bindEvents();
         this.setupFileUploads();
         this.activateDefaultTab();
+        this.setupRulesToggle();
+        this.checkPreviousRegistration();
+    }
+
+    // New method to check previous registration
+    async checkPreviousRegistration() {
+        const lastRegistrationId = localStorage.getItem('lastRegistrationId');
+        if (lastRegistrationId) {
+            try {
+                const response = await this.checkRegistrationStatus(lastRegistrationId);
+                if (response && response.status === 'success') {
+                    this.showAlert(`Welcome back! Your previous registration ID is ${lastRegistrationId}.`, 'info');
+                }
+            } catch (error) {
+                console.error('Error checking registration status:', error);
+                localStorage.removeItem('lastRegistrationId');
+            }
+        }
+    }
+
+    // New method to check registration status
+    async checkRegistrationStatus(registrationId) {
+        try {
+            const response = await fetch(this.scriptUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'getRegistrationDetails',
+                    registrationId: registrationId
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            
+            if (data.status === 'error') {
+                throw new Error(data.message || 'Registration not found');
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Error checking registration:', error);
+            throw error;
+        }
     }
 
     cacheElements() {
@@ -37,7 +89,9 @@ class RegistrationForm {
             downloadReceiptBtn: document.getElementById('downloadReceiptBtn'),
             loadingOverlay: document.getElementById('loadingOverlay'),
             formTabs: document.getElementById('formTabs'),
-            container: document.querySelector('.container')
+            container: document.querySelector('.container'),
+            rulesHeaders: document.querySelectorAll('.rules-header'),
+            rulesContents: document.querySelectorAll('.rules-content')
         };
     }
 
@@ -57,6 +111,27 @@ class RegistrationForm {
         this.elements.downloadReceiptBtn?.addEventListener('click', () => this.generateReceipt());
         
         this.setupRealTimeValidation();
+    }
+
+    setupRulesToggle() {
+        this.elements.rulesHeaders.forEach(header => {
+            header.addEventListener('click', (e) => {
+                const contentId = e.currentTarget.getAttribute('onclick').match(/'([^']+)'/)[1];
+                const content = document.getElementById(contentId);
+                const icon = e.currentTarget.querySelector('i');
+                
+                content.classList.toggle('active');
+                icon.classList.toggle('fa-chevron-down');
+                icon.classList.toggle('fa-chevron-up');
+                
+                // Smooth height transition
+                if (content.classList.contains('active')) {
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                } else {
+                    content.style.maxHeight = '0';
+                }
+            });
+        });
     }
 
     setupRealTimeValidation() {
@@ -217,22 +292,41 @@ class RegistrationForm {
                 })
             });
             
+            if (!response.ok) {
+                let errorMessage = 'Network response was not ok';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorMessage;
+                } catch (e) {
+                    console.error('Error parsing error response:', e);
+                }
+                throw new Error(errorMessage);
+            }
+            
             const data = await response.json();
             
-            if (!response.ok || data.status === 'error') {
-                throw new Error(data.message || 'Unknown error occurred');
+            if (data.status === 'error') {
+                throw new Error(data.message || 'Registration failed');
             }
             
             return data;
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Submission error:', error);
             throw new Error(`Failed to submit registration: ${error.message}`);
         }
     }
 
     handleFailure(error, formType, submitBtn) {
         this.elements.loadingOverlay.style.display = 'none';
-        this.showAlert(`Registration failed: ${error.message}. Please try again.`, 'danger');
+        
+        let userMessage = error.message;
+        if (error.message.includes('NetworkError')) {
+            userMessage = 'Network error. Please check your internet connection and try again.';
+        } else if (error.message.includes('already registered')) {
+            userMessage = 'This email or phone number is already registered.';
+        }
+        
+        this.showAlert(`Registration failed: ${userMessage}`, 'danger');
         
         if (submitBtn) {
             submitBtn.disabled = false;
@@ -361,6 +455,11 @@ class RegistrationForm {
             this.elements.formTabs.style.display = 'none';
             
             this.scrollToElement(this.elements.alerts.success, 600);
+            
+            // Store registration ID in localStorage
+            if (response.details.registrationId) {
+                localStorage.setItem('lastRegistrationId', response.details.registrationId);
+            }
         } else {
             this.showAlert('Registration successful but received unexpected response from server. Please contact support with your details.', 'warning');
         }
@@ -481,33 +580,43 @@ class RegistrationForm {
     }
 
     generateReceipt() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        doc.addImage('https://i.postimg.cc/ctKSwrkj/Smile-logo.png', 'PNG', 85, 15, 40, 40);
-        
-        doc.setFontSize(20);
-        doc.setTextColor(108, 92, 231);
-        doc.text('Apex Smile Festival 2025', 105, 65, { align: 'center' });
-        
-        doc.setFontSize(14);
-        doc.setTextColor(0, 0, 0);
-        doc.text('Registration Receipt', 105, 75, { align: 'center' });
-        
-        doc.setFontSize(12);
-        doc.text(`Registration ID: ${this.elements.alerts.registrationId.textContent}`, 20, 90);
-        doc.text(`Name: ${this.state.currentRegistration.name}`, 20, 100);
-        doc.text(`Email: ${this.state.currentRegistration.email}`, 20, 110);
-        doc.text(`Contact: ${this.state.currentRegistration.contact}`, 20, 120);
-        doc.text(`Competition: ${this.state.currentRegistration.competitionType}`, 20, 130);
-        doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 140);
-        
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text('Thank you for registering!', 105, 180, { align: 'center' });
-        doc.text('Present this receipt at the event entrance', 105, 185, { align: 'center' });
-        
-        doc.save(`ApexSmileFestival_${this.elements.alerts.registrationId.textContent}.pdf`);
+        if (!window.jspdf) {
+            this.showAlert('PDF generation library not loaded. Please try again later.', 'danger');
+            return;
+        }
+
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.addImage('https://i.postimg.cc/ctKSwrkj/Smile-logo.png', 'PNG', 85, 15, 40, 40);
+            
+            doc.setFontSize(20);
+            doc.setTextColor(108, 92, 231);
+            doc.text('Apex Smile Festival 2025', 105, 65, { align: 'center' });
+            
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0);
+            doc.text('Registration Receipt', 105, 75, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.text(`Registration ID: ${this.elements.alerts.registrationId.textContent}`, 20, 90);
+            doc.text(`Name: ${this.state.currentRegistration.name}`, 20, 100);
+            doc.text(`Email: ${this.state.currentRegistration.email}`, 20, 110);
+            doc.text(`Contact: ${this.state.currentRegistration.contact}`, 20, 120);
+            doc.text(`Competition: ${this.state.currentRegistration.competitionType}`, 20, 130);
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 140);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Thank you for registering!', 105, 180, { align: 'center' });
+            doc.text('Present this receipt at the event entrance', 105, 185, { align: 'center' });
+            
+            doc.save(`ApexSmileFestival_${this.elements.alerts.registrationId.textContent}.pdf`);
+        } catch (error) {
+            console.error('Error generating receipt:', error);
+            this.showAlert('Failed to generate receipt. Please try again.', 'danger');
+        }
     }
 }
 
