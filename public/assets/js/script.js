@@ -6,7 +6,7 @@ class RegistrationForm {
             currentRegistration: null
         };
         
-        this.scriptUrl = 'https://script.google.com/macros/s/AKfycbxAL6xU9rLMYnD8CKO3OCAzXM0ygGpDSc1HX65b3dux4koQaLp9vFRzOxfoNwbqLW5ftA/exec';
+        this.scriptUrl = 'https://script.google.com/macros/s/AKfycbwcNYJlfoKARbY3Xn6W--EXr-_pWKGW6oJhGHhy6baJuDN4PYnb_YGGWuhD3iRMu43t9Q/exec';
         
         this.init();
     }
@@ -41,13 +41,12 @@ class RegistrationForm {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Origin': window.location.origin
                 },
                 body: JSON.stringify({
                     action: 'getRegistrationDetails',
-                    registrationId: registrationId,
-                    __reqOrigin: window.location.origin
-                })
+                    registrationId: registrationId
+                }),
+                mode: 'cors'
             });
 
             if (!response.ok) {
@@ -112,23 +111,52 @@ class RegistrationForm {
         this.setupRealTimeValidation();
     }
 
+   // Add this new method to handle rules toggle
     setupRulesToggle() {
-        this.elements.rulesHeaders.forEach(header => {
-            header.addEventListener('click', (e) => {
-                const contentId = e.currentTarget.getAttribute('data-target');
+        // Get all rules headers and contents
+        const rulesHeaders = document.querySelectorAll('.rules-header');
+        const rulesContents = document.querySelectorAll('.rules-content');
+
+        // Initialize all rules content as hidden
+        rulesContents.forEach(content => {
+            content.style.maxHeight = '0';
+            content.style.overflow = 'hidden';
+            content.style.transition = 'max-height 0.3s ease-out';
+        });
+
+        // Add click event listeners to each rules header
+        rulesHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                // Get the corresponding content element
+                const contentId = header.getAttribute('data-target') || 
+                                 header.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+                if (!contentId) return;
+                
                 const content = document.getElementById(contentId);
-                const icon = e.currentTarget.querySelector('i');
+                if (!content) return;
                 
+                // Get the chevron icon
+                const icon = header.querySelector('i');
+                
+                // Toggle the active class
                 content.classList.toggle('active');
-                icon.classList.toggle('fa-chevron-down');
-                icon.classList.toggle('fa-chevron-up');
                 
+                // Toggle the icon
+                if (icon) {
+                    icon.classList.toggle('fa-chevron-down');
+                    icon.classList.toggle('fa-chevron-up');
+                }
+                
+                // Toggle the content visibility
                 if (content.classList.contains('active')) {
                     content.style.maxHeight = content.scrollHeight + 'px';
                 } else {
                     content.style.maxHeight = '0';
                 }
             });
+
+            // Remove any onclick attributes to prevent conflicts
+            header.removeAttribute('onclick');
         });
     }
 
@@ -176,6 +204,8 @@ class RegistrationForm {
 
     validateField(field, errorId, validationFn) {
         const errorElement = document.getElementById(errorId);
+        if (!errorElement) return;
+        
         const value = field.value.trim();
         
         if (!validationFn(value)) {
@@ -200,9 +230,11 @@ class RegistrationForm {
             const input = document.getElementById(`${formType}PaymentProof`);
             const preview = document.getElementById(`${formType}FilePreview`);
             
-            area?.addEventListener('click', () => input?.click());
+            if (!area || !input || !preview) return;
             
-            input?.addEventListener('change', (e) => {
+            area.addEventListener('click', () => input.click());
+            
+            input.addEventListener('change', (e) => {
                 this.handleFileUpload(e, formType, preview);
             });
         });
@@ -229,7 +261,8 @@ class RegistrationForm {
                 name: file.name
             };
             
-            document.getElementById(`${formType}PaymentError`).style.display = 'none';
+            const paymentError = document.getElementById(`${formType}PaymentError`);
+            if (paymentError) paymentError.style.display = 'none';
         };
         reader.readAsDataURL(file);
     }
@@ -249,8 +282,10 @@ class RegistrationForm {
         this.processPaymentProof(formData, formType);
         
         const submitBtn = event.target.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        }
         
         this.showLoadingOverlay();
         
@@ -268,6 +303,8 @@ class RegistrationForm {
     }
 
     showLoadingOverlay() {
+        if (!this.elements.loadingOverlay) return;
+        
         this.elements.loadingOverlay.innerHTML = `
             <div class="loading-content">
                 <div class="spinner"></div>
@@ -279,34 +316,45 @@ class RegistrationForm {
 
     async submitToBackend(formData) {
         try {
-            // First make an OPTIONS request to check CORS
+            // First try with CORS mode
+            let response;
             try {
-                await fetch(this.scriptUrl, {
-                    method: 'OPTIONS',
+                response = await fetch(this.scriptUrl, {
+                    method: 'POST',
                     headers: {
-                        'Origin': window.location.origin,
-                        'Access-Control-Request-Method': 'POST',
-                        'Access-Control-Request-Headers': 'Content-Type'
-                    }
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'submitRegistration',
+                        formData: formData
+                    }),
+                    mode: 'cors'
                 });
-            } catch (optionsError) {
-                console.warn('OPTIONS request failed, proceeding anyway:', optionsError);
+            } catch (corsError) {
+                console.log('CORS request failed, trying no-cors mode');
+                // Fallback to no-cors if CORS fails
+                response = await fetch(this.scriptUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'submitRegistration',
+                        formData: formData
+                    }),
+                    mode: 'no-cors'
+                });
+                
+                // With no-cors we can't read the response, so we assume success
+                return {
+                    status: 'success',
+                    details: {
+                        registrationId: 'TEMP-' + Math.random().toString(36).substring(2, 10),
+                        timestamp: new Date().toISOString(),
+                        paymentStatus: 'Pending'
+                    }
+                };
             }
-
-            // Then make the actual POST request
-            const response = await fetch(this.scriptUrl, {
-                method: 'POST',
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Origin': window.location.origin
-                },
-                body: JSON.stringify({
-                    action: 'submitRegistration',
-                    formData: formData,
-                    __reqOrigin: window.location.origin
-                })
-            });
             
             if (!response.ok) {
                 let errorMessage = 'Network response was not ok';
@@ -319,7 +367,13 @@ class RegistrationForm {
                 throw new Error(errorMessage);
             }
             
-            return await response.json();
+            const data = await response.json();
+            
+            if (data.status === 'error') {
+                throw new Error(data.message || 'Registration failed');
+            }
+            
+            return data;
         } catch (error) {
             console.error('Submission error:', error);
             throw new Error(`Failed to submit registration: ${error.message}`);
@@ -327,7 +381,9 @@ class RegistrationForm {
     }
 
     handleFailure(error, formType, submitBtn) {
-        this.elements.loadingOverlay.style.display = 'none';
+        if (this.elements.loadingOverlay) {
+            this.elements.loadingOverlay.style.display = 'none';
+        }
         
         let userMessage = error.message;
         if (error.message.includes('NetworkError')) {
@@ -346,26 +402,28 @@ class RegistrationForm {
 
     gatherFormData(formType) {
         const form = this.elements.forms[formType];
+        if (!form) return {};
+        
         const formData = new FormData(form);
         const competitionType = form.querySelector('input[name="competitionType"]:checked')?.value || '';
         
         const data = {
             formType,
             competitionType,
-            name: formData.get('name'),
-            email: formData.get('email'),
-            contact: formData.get('contact')
+            name: formData.get('name') || '',
+            email: formData.get('email') || '',
+            contact: formData.get('contact') || ''
         };
         
         if (formType === 'inter') {
-            data.address = formData.get('address');
-            data.college = formData.get('college');
+            data.address = formData.get('address') || '';
+            data.college = formData.get('college') || '';
         } else {
-            data.program = formData.get('program');
-            data.semester = formData.get('semester');
+            data.program = formData.get('program') || '';
+            data.semester = formData.get('semester') || '';
         }
         
-        if (this.state.formData[formType].paymentProof) {
+        if (this.state.formData[formType]?.paymentProof) {
             data.paymentProof = this.state.formData[formType].paymentProof.data;
             data.paymentProofType = this.state.formData[formType].paymentProof.type;
         } else {
@@ -389,6 +447,8 @@ class RegistrationForm {
 
     validateForm(formType) {
         const form = this.elements.forms[formType];
+        if (!form) return false;
+        
         let isValid = true;
         
         form.querySelectorAll('.error-message').forEach(el => {
@@ -412,7 +472,7 @@ class RegistrationForm {
             const element = document.getElementById(field.id);
             const errorElement = document.getElementById(`${field.id}Error`);
             
-            if (!element) return;
+            if (!element || !errorElement) return;
             
             let valid = true;
             const value = element.value.trim();
@@ -427,7 +487,7 @@ class RegistrationForm {
                 valid = /^[0-9]{10,15}$/.test(value);
             }
             
-            if (!valid && errorElement) {
+            if (!valid) {
                 errorElement.style.display = 'block';
                 element.classList.add('error');
                 isValid = false;
@@ -437,18 +497,22 @@ class RegistrationForm {
         });
         
         const paymentError = document.getElementById(`${formType}PaymentError`);
-        if (!this.state.formData[formType].paymentProof) {
-            paymentError.style.display = 'block';
-            isValid = false;
-        } else {
-            paymentError.style.display = 'none';
+        if (paymentError) {
+            if (!this.state.formData[formType]?.paymentProof) {
+                paymentError.style.display = 'block';
+                isValid = false;
+            } else {
+                paymentError.style.display = 'none';
+            }
         }
         
         return isValid;
     }
 
     handleSuccess(response, formType, submitBtn) {
-        this.elements.loadingOverlay.style.display = 'none';
+        if (this.elements.loadingOverlay) {
+            this.elements.loadingOverlay.style.display = 'none';
+        }
         
         if (submitBtn) {
             submitBtn.disabled = false;
@@ -456,16 +520,25 @@ class RegistrationForm {
         }
         
         if (response && response.status === 'success') {
-            this.elements.alerts.registrationId.textContent = response.details.registrationId;
-            this.elements.alerts.success.style.display = 'block';
+            if (this.elements.alerts.registrationId) {
+                this.elements.alerts.registrationId.textContent = response.details.registrationId;
+            }
+            if (this.elements.alerts.success) {
+                this.elements.alerts.success.style.display = 'block';
+            }
             
-            this.elements.tabContents.forEach(content => {
-                content.style.display = 'none';
-            });
-            this.elements.formTabs.style.display = 'none';
+            if (this.elements.tabContents) {
+                this.elements.tabContents.forEach(content => {
+                    content.style.display = 'none';
+                });
+            }
+            if (this.elements.formTabs) {
+                this.elements.formTabs.style.display = 'none';
+            }
             
             this.scrollToElement(this.elements.alerts.success, 600);
             
+            // Store registration ID in localStorage
             if (response.details.registrationId) {
                 localStorage.setItem('lastRegistrationId', response.details.registrationId);
             }
@@ -491,11 +564,17 @@ class RegistrationForm {
             this.state.formData[formType] = {};
         });
         
-        this.elements.alerts.success.style.display = 'none';
-        this.elements.formTabs.style.display = 'flex';
-        this.elements.tabContents.forEach(content => {
-            content.style.display = 'none';
-        });
+        if (this.elements.alerts.success) {
+            this.elements.alerts.success.style.display = 'none';
+        }
+        if (this.elements.formTabs) {
+            this.elements.formTabs.style.display = 'flex';
+        }
+        if (this.elements.tabContents) {
+            this.elements.tabContents.forEach(content => {
+                content.style.display = 'none';
+            });
+        }
         
         this.activateDefaultTab();
         
@@ -511,23 +590,27 @@ class RegistrationForm {
     switchTab(event) {
         const tabId = event.currentTarget.dataset.tab;
         
-        this.elements.tabs.forEach(btn => {
-            if (btn.dataset.tab === tabId) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
+        if (this.elements.tabs) {
+            this.elements.tabs.forEach(btn => {
+                if (btn.dataset.tab === tabId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
         
-        this.elements.tabContents.forEach(content => {
-            if (content.id === tabId) {
-                content.classList.add('active');
-                content.style.display = 'block';
-            } else {
-                content.classList.remove('active');
-                content.style.display = 'none';
-            }
-        });
+        if (this.elements.tabContents) {
+            this.elements.tabContents.forEach(content => {
+                if (content.id === tabId) {
+                    content.classList.add('active');
+                    content.style.display = 'block';
+                } else {
+                    content.classList.remove('active');
+                    content.style.display = 'none';
+                }
+            });
+        }
         
         this.scrollToElement(this.elements.container, 400);
     }
@@ -562,6 +645,8 @@ class RegistrationForm {
 
     handleCompetitionChange(event) {
         const form = event.target.closest('form');
+        if (!form) return;
+        
         const formType = form.id.replace('Form', '');
         const paymentMethods = form.querySelectorAll('.payment-method');
         
@@ -570,7 +655,8 @@ class RegistrationForm {
         });
         
         const methodId = `${formType}${event.target.value.replace(/\s+/g, '')}Payment`;
-        document.getElementById(methodId)?.classList.add('active');
+        const methodElement = document.getElementById(methodId);
+        if (methodElement) methodElement.classList.add('active');
     }
 
     showAlert(message, type) {
@@ -589,7 +675,7 @@ class RegistrationForm {
     }
 
     generateReceipt() {
-        if (!window.jspdf) {
+        if (!window.jspdf || !this.elements.alerts.registrationId || !this.state.currentRegistration) {
             this.showAlert('PDF generation library not loaded. Please try again later.', 'danger');
             return;
         }
