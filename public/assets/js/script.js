@@ -112,32 +112,25 @@ class RegistrationForm {
     }
 
    // Add this new method to handle rules toggle
-    setupRulesToggle() {
-        // Get all rules headers and contents
-        const rulesHeaders = document.querySelectorAll('.rules-header');
-        const rulesContents = document.querySelectorAll('.rules-content');
-
-        // Initialize all rules content as hidden
-        rulesContents.forEach(content => {
+setupRulesToggle() {
+    const rulesHeaders = document.querySelectorAll('.rules-header');
+    
+    rulesHeaders.forEach(header => {
+        // Remove any existing onclick handlers to prevent conflicts
+        header.removeAttribute('onclick');
+        
+        // Find the corresponding content element
+        const icon = header.querySelector('i');
+        const content = header.nextElementSibling;
+        
+        // Initialize state
+        if (content && content.classList.contains('rules-content')) {
             content.style.maxHeight = '0';
             content.style.overflow = 'hidden';
             content.style.transition = 'max-height 0.3s ease-out';
-        });
-
-        // Add click event listeners to each rules header
-        rulesHeaders.forEach(header => {
+            
+            // Add click event listener
             header.addEventListener('click', () => {
-                // Get the corresponding content element
-                const contentId = header.getAttribute('data-target') || 
-                                 header.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-                if (!contentId) return;
-                
-                const content = document.getElementById(contentId);
-                if (!content) return;
-                
-                // Get the chevron icon
-                const icon = header.querySelector('i');
-                
                 // Toggle the active class
                 content.classList.toggle('active');
                 
@@ -154,11 +147,9 @@ class RegistrationForm {
                     content.style.maxHeight = '0';
                 }
             });
-
-            // Remove any onclick attributes to prevent conflicts
-            header.removeAttribute('onclick');
-        });
-    }
+        }
+    });
+}
 
     setupRealTimeValidation() {
         document.getElementById('interName')?.addEventListener('input', (e) => {
