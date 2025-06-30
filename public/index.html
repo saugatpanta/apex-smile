@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=(), payment=()">
+    <title>Registration Form | Apex Smile Festival 2025</title>
+    <link rel="icon" href="https://raw.githubusercontent.com/saugatpanta/icon/main/Smile%20logo.ico" type="icon/ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+    
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Processing your submission...</p>
+    </div>
+
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <img src='https://i.postimg.cc/ctKSwrkj/Smile-logo.png' border='0' alt='Smile-logo' />
+            </div>
+            <h1>Apex Smile Festival 2025</h1>
+            <p>Celebrating art and spreading smiles through creativity</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div id="alertBox" class="alert" style="display: none;"></div>
+        
+        <div class="success-container" id="successContainer">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>🎉 Registration Successful! 🎉</h2>
+            <p class="success-message">Your registration for the Apex Smile Festival 2025 has been confirmed.</p>
+            <p class="success-message">We look forward to seeing your creative contributions!</p>
+            
+            <div class="registration-id" id="registrationIdDisplay"></div>
+            <p>Present this registration ID at the event entrance for access.</p>
+            
+            <div class="action-buttons">
+                <button class="btn btn-secondary" id="newRegistrationBtn">
+                    <i class="fas fa-plus"></i> New Registration
+                </button>
+                <button class="btn btn-success" id="downloadReceiptBtn">
+                    <i class="fas fa-download"></i> Download Receipt
+                </button>
+            </div>
+        </div>
+
+        <!-- Rules Section -->
+        <div class="rules-container">
+            <div class="rules-header" onclick="toggleRules('liveArtRules')">
+                <h3>Live Art Competition – Rules & Regulations</h3>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="rules-content" id="liveArtRules">
+                <ul class="rules-list">
+                    <li><strong>Eligibility:</strong> Open to all students representing their respective institutions. A maximum of two participants per institution is allowed. Participants up to age 28 are eligible to participate.</li>
+                    <li><strong>Theme:</strong> The theme for the event is open. Participants are encouraged to showcase their creative liberty.</li>
+                    <li><strong>Date & Time:</strong> The event will be held on Thursday (10th July, 2025), from 10:00 AM to 4:00 PM. Participants will be allotted a total of 4 hours (11AM to 3PM) to complete their artwork.</li>
+                    <li><strong>Medium & Materials:</strong> Canvas or A3-size art paper (11.7 x 16.5 inches) will be provided by the organizing committee. Basic art supplies will be provided at the venue. Other needed supplies are to be brought by the participants themselves. Only non-digital artwork is allowed (traditional mediums like watercolor, acrylic, pencil, etc.).</li>
+                    <li><strong>Submission:</strong> Artworks must have the participant's name and institution clearly written on the back. No identifying marks, names, or symbols should be visible on the front side of the artwork. All work must cease promptly at the end of the allotted time. Artwork submitted must not contain any depiction of alcohol consumption, alcoholic beverages, or smoking. Such submissions will be disqualified or removed.</li>
+                    <li><strong>Evaluation Criteria:</strong> Creativity & originality, Technique and artistic skill, Overall visual impact</li>
+                    <li><strong>Additional Rules:</strong> Use of reference images is allowed but no tracing or projection. Any form of obscene, offensive, or inappropriate content will result in disqualification. The judges' decisions are final and non-contestable.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="rules-container">
+            <div class="rules-header" onclick="toggleRules('photographyRules')">
+                <h3>Photography Competition – Rules & Regulations</h3>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="rules-content" id="photographyRules">
+                <ul class="rules-list">
+                    <li><strong>Eligibility:</strong> Open to all college students (individual participation only). Maximum 2 participants per college.</li>
+                    <li><strong>Theme:</strong> "Stories in a Smile" - Submissions must clearly reflect the assigned theme.</li>
+                    <li><strong>Submission Guidelines:</strong> Each participant can submit only one original photo. Files must be submitted in JPEG/PNG format with high resolution (At least 8 x 10 inches at 300 DPI (i.e., ~2400 x 3000 pixels). Only basic image adjustments (brightness, contrast, saturation) are allowed. Manipulated or AI-generated images will be disqualified. A caption or description (maximum 50 words) is mandatory and must convey the participant's perspective or the essence of the image. Participants should submit their photographs by 7th July, 2025 (till 4pm). Photos submitted must not contain any depiction of alcohol consumption, alcoholic beverages, or smoking. Such submissions will be disqualified or removed.</li>
+                    <li><strong>Technical Requirements:</strong> File name should be: Name_College_Title.jpg. Entries must be original, taken by the participant, and free from copyright or third-party ownership. No watermarks, logos, or identifiable marks should be present on the image.</li>
+                    <li><strong>Evaluation Criteria:</strong> Relevance to theme, Creativity & storytelling, Composition & technique, Visual/ overall impact</li>
+                    <li><strong>Other Rules:</strong> Plagiarism or submission of copyrighted work will result in immediate disqualification.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="tabs" id="formTabs">
+            <button class="tab-btn active" data-tab="inter">Inter College</button>
+            <button class="tab-btn" data-tab="intra">Intra College</button>
+        </div>
+        
+        <!-- Inter College Form -->
+        <div id="inter" class="tab-content active">
+            <form id="interForm" class="form-container slide-in">
+                <div class="form-group">
+                    <label for="interName">Full Name <span class="required">*</span></label>
+                    <input type="text" id="interName" name="name" required placeholder="Enter your full name">
+                    <div class="error-message" id="interNameError">Please enter your full name</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="interAddress">Address <span class="required">*</span></label>
+                    <input type="text" id="interAddress" name="address" required placeholder="Your complete address">
+                    <div class="error-message" id="interAddressError">Please enter your address</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="interCollegeName">College Name <span class="required">*</span></label>
+                    <input type="text" id="interCollegeName" name="college" required placeholder="Your college name">
+                    <div class="error-message" id="interCollegeError">Please enter your college name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="interEmail">Email <span class="required">*</span></label>
+                    <input type="email" id="interEmail" name="email" required placeholder="example@domain.com">
+                    <div class="error-message" id="interEmailError">Please enter a valid email address</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="interContact">Contact Number <span class="required">*</span></label>
+                    <input type="tel" id="interContact" name="contact" required placeholder="98XXXXXXXX">
+                    <div class="error-message" id="interContactError">Please enter a valid 10-digit phone number</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Preferred Competition <span class="required">*</span></label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="competitionType" value="Live Art" required checked> Live Art
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="competitionType" value="Photography"> Photography
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="competitionType" value="Both"> Both
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="payment-section">
+                    <h3>Payment Information</h3>
+                    <div class="payment-info">
+                        <div class="payment-method active" id="interLiveArtPayment">
+                            <h4>Live Art</h4>
+                            <div class="price">Rs. 1000</div>
+                            <div class="qr-container">
+                                <div class="payment-info-title">Scan to pay</div>
+                                <img src='https://i.postimg.cc/85Vpj4wp/Whats-App-Image-2025-06-22-at-17-40-20-c8c24247.jpg' border='0' alt='eSewa QR Code' class="qr-code" />
+                                <div class="esewa-info">eSewa ID: 9869858532</div>
+                            </div>
+                        </div>
+                        <div class="payment-method" id="interPhotographyPayment">
+                            <h4>Photography</h4>
+                            <div class="price">Rs. 250</div>
+                            <div class="qr-container">
+                                <div class="payment-info-title">Scan to pay</div>
+                                <img src='https://i.postimg.cc/85Vpj4wp/Whats-App-Image-2025-06-22-at-17-40-20-c8c24247.jpg' border='0' alt='eSewa QR Code' class="qr-code" />
+                                <div class="esewa-info">eSewa ID: 9869858532</div>
+                            </div>
+                        </div>
+                        <div class="payment-method" id="interBothPayment">
+                            <h4>Both Competitions</h4>
+                            <div class="price">Rs. 1250</div>
+                            <div class="qr-container">
+                                <div class="payment-info-title">Scan to pay</div>
+                                <img src='https://i.postimg.cc/85Vpj4wp/Whats-App-Image-2025-06-22-at-17-40-20-c8c24247.jpg' border='0' alt='eSewa QR Code' class="qr-code" />
+                                <div class="esewa-info">eSewa ID: 9869858532</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group confirmation">
+                    <label>Payment Confirmation <span class="required">*</span></label>
+                    <div class="upload-area" id="interPaymentUpload">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click to upload payment screenshot</p>
+                        <p class="file-requirements">(JPEG, PNG, GIF, or WebP, max 5MB)</p>
+                        <input type="file" id="interPaymentProof" name="paymentProof" accept="image/jpeg,image/png,image/gif,image/webp" style="display: none;">
+                    </div>
+                    <img id="interFilePreview" class="file-preview" alt="Payment proof preview">
+                    <div class="error-message" id="interPaymentError">Please upload payment proof</div>
+                </div>
+                
+                <button type="submit" class="btn btn-block">Submit Registration</button>
+            </form>
+        </div>
+        
+        <!-- Intra College Form -->
+        <div id="intra" class="tab-content">
+            <form id="intraForm" class="form-container slide-in">
+                <div class="form-group">
+                    <label for="intraName">Full Name <span class="required">*</span></label>
+                    <input type="text" id="intraName" name="name" required placeholder="Enter your full name">
+                    <div class="error-message" id="intraNameError">Please enter your full name</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="intraProgram">Program <span class="required">*</span></label>
+                    <select id="intraProgram" name="program" required>
+                        <option value="">Select Program</option>
+                        <option value="BBA-FINANCE">BBA-FINANCE</option>
+                        <option value="BBA-TT">BBA-TT</option>
+                        <option value="BBA">BBA</option>
+                        <option value="BCSIT">BCSIT</option>
+                        <option value="BCIS">BCIS</option>
+                        <option value="BBA-BI">BBA-BI</option>
+                    </select>
+                    <div class="error-message" id="intraProgramError">Please select your program</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="intraEmail">Email <span class="required">*</span></label>
+                    <input type="email" id="intraEmail" name="email" required placeholder="example@domain.com">
+                    <div class="error-message" id="intraEmailError">Please enter a valid email address</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="intraContact">Contact Number <span class="required">*</span></label>
+                    <input type="tel" id="intraContact" name="contact" required placeholder="98XXXXXXXX">
+                    <div class="error-message" id="intraContactError">Please enter a valid 10-digit phone number</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="intraSemester">Semester <span class="required">*</span></label>
+                    <select id="intraSemester" name="semester" required>
+                        <option value="">Select Semester</option>
+                        <option value="First Semester">First Semester</option>
+                        <option value="Second Semester">Second Semester</option>
+                        <option value="Third Semester">Third Semester</option>
+                        <option value="Fourth Semester">Fourth Semester</option>
+                        <option value="Fifth Semester">Fifth Semester</option>
+                        <option value="Sixth Semester">Sixth Semester</option>
+                        <option value="Seventh Semester">Seventh Semester</option>
+                        <option value="Eighth Semester">Eighth Semester</option>
+                    </select>
+                    <div class="error-message" id="intraSemesterError">Please select your semester</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Preferred Competition <span class="required">*</span></label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="competitionType" value="Live Art" required checked> Live Art
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="competitionType" value="Photography"> Photography
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="competitionType" value="Both"> Both
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="payment-section">
+                    <h3>Payment Information</h3>
+                    <div class="payment-info">
+                        <div class="payment-method active" id="intraLiveArtPayment">
+                            <h4>Live Art</h4>
+                            <div class="price">Rs. 1000</div>
+                            <div class="qr-container">
+                                <div class="payment-info-title">Scan to pay</div>
+                                <img src='https://i.postimg.cc/85Vpj4wp/Whats-App-Image-2025-06-22-at-17-40-20-c8c24247.jpg' border='0' alt='eSewa QR Code' class="qr-code" />
+                                <div class="esewa-info">eSewa ID: 9869858532</div>
+                            </div>
+                        </div>
+                        <div class="payment-method" id="intraPhotographyPayment">
+                            <h4>Photography</h4>
+                            <div class="price">Rs. 250</div>
+                            <div class="qr-container">
+                                <div class="payment-info-title">Scan to pay</div>
+                                <img src='https://i.postimg.cc/85Vpj4wp/Whats-App-Image-2025-06-22-at-17-40-20-c8c24247.jpg' border='0' alt='eSewa QR Code' class="qr-code" />
+                                <div class="esewa-info">eSewa ID: 9869858532</div>
+                            </div>
+                        </div>
+                        <div class="payment-method" id="intraBothPayment">
+                            <h4>Both Competitions</h4>
+                            <div class="price">Rs. 1250</div>
+                            <div class="qr-container">
+                                <div class="payment-info-title">Scan to pay</div>
+                                <img src='https://i.postimg.cc/85Vpj4wp/Whats-App-Image-2025-06-22-at-17-40-20-c8c24247.jpg' border='0' alt='eSewa QR Code' class="qr-code" />
+                                <div class="esewa-info">eSewa ID: 9869858532</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group confirmation">
+                    <label>Payment Confirmation <span class="required">*</span></label>
+                    <div class="upload-area" id="intraPaymentUpload">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click to upload payment screenshot</p>
+                        <p class="file-requirements">(JPEG, PNG, GIF, or WebP, max 5MB)</p>
+                        <input type="file" id="intraPaymentProof" name="paymentProof" accept="image/jpeg,image/png,image/gif,image/webp" style="display: none;">
+                    </div>
+                    <img id="intraFilePreview" class="file-preview" alt="Payment proof preview">
+                    <div class="error-message" id="intraPaymentError">Please upload payment proof</div>
+                </div>
+                
+                <button type="submit" class="btn btn-block">Submit Registration</button>
+            </form>
+        </div>
+        
+        <footer>
+            <p>&copy; Apex Smile Festival 2025. All rights reserved.</p>
+            <p>Contact: apexmediaandmarketing@apexcollege.edu.np | Phone: +977 9840530506</p>
+            <div class="social-links">
+                <a href="https://www.instagram.com/apexmediamarketingclub/" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="https://www.facebook.com/apexmediaclub" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://www.tiktok.com/@apexmediamarketingclub?_t=ZS-8xVHULdLJ2H&_r=1" target="_blank" title="TikTok"><i class="fab fa-tiktok"></i></a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="assets/js/script.js"></script>
+</body>
+</html>
