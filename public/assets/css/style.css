@@ -1151,3 +1151,135 @@ footer p {
         padding: 14px 20px;
     }
 }
+
+* Prize Pool Styles */
+.prize-pool {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 25px;
+    margin: 30px auto 0;
+    max-width: 800px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 1s ease;
+}
+
+.prize-pool h3 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: white;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+.prize-categories {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.prize-category {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 12px;
+    flex: 1;
+    min-width: 250px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    transition: var(--transition);
+}
+
+.prize-category:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.prize-category h4 {
+    color: var(--primary);
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    text-align: center;
+    border-bottom: 2px solid var(--secondary);
+    padding-bottom: 10px;
+}
+
+.prize-category ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.prize-category li {
+    padding: 8px 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+}
+
+.prize-category li::before {
+    content: '💰';
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.prize-note {
+    font-size: 1rem;
+    text-align: center;
+    color: white;
+    opacity: 0.9;
+    font-style: italic;
+    margin-top: 15px;
+}
+
+/* Responsive adjustments for prize pool */
+@media (max-width: 768px) {
+    .prize-pool {
+        padding: 20px;
+    }
+    
+    .prize-pool h3 {
+        font-size: 1.5rem;
+    }
+    
+    .prize-category {
+        min-width: 100%;
+    }
+    
+    .prize-category h4 {
+        font-size: 1.2rem;
+    }
+    
+    .prize-category li {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .prize-pool {
+        padding: 15px;
+    }
+    
+    .prize-pool h3 {
+        font-size: 1.3rem;
+    }
+    
+    .prize-category {
+        padding: 15px;
+    }
+    
+    .prize-category h4 {
+        font-size: 1.1rem;
+    }
+    
+    .prize-category li {
+        font-size: 0.95rem;
+    }
+    
+    .prize-note {
+        font-size: 0.9rem;
+    }
+}
