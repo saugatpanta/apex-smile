@@ -6,7 +6,7 @@ class RegistrationForm {
             currentRegistration: null
         };
         
-        this.scriptUrl = 'https://script.google.com/macros/s/AKfycbx9GXZ0ft6orTXKIcSV-6ocbnStGAVhbxOs4w40hpII8bcvkjZTbkIrL_GJuxlE10DLow/exec';
+        this.scriptUrl = 'https://script.google.com/macros/s/AKfycbxAL6xU9rLMYnD8CKO3OCAzXM0ygGpDSc1HX65b3dux4koQaLp9vFRzOxfoNwbqLW5ftA/exec';
         
         this.init();
     }
