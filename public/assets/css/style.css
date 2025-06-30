@@ -1152,7 +1152,9 @@ footer p {
     }
 }
 
-* Prize Pool Styles */
+/* Add this to your existing CSS */
+
+/* Prize Pool Styles */
 .prize-pool {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 16px;
