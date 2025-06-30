@@ -6,7 +6,6 @@ class RegistrationForm {
             currentRegistration: null
         };
         
-        // Use environment variable for script URL
         this.scriptUrl = 'https://script.google.com/macros/s/AKfycbx9GXZ0ft6orTXKIcSV-6ocbnStGAVhbxOs4w40hpII8bcvkjZTbkIrL_GJuxlE10DLow/exec';
         
         this.init();
@@ -21,7 +20,6 @@ class RegistrationForm {
         this.checkPreviousRegistration();
     }
 
-    // New method to check previous registration
     async checkPreviousRegistration() {
         const lastRegistrationId = localStorage.getItem('lastRegistrationId');
         if (lastRegistrationId) {
@@ -37,7 +35,6 @@ class RegistrationForm {
         }
     }
 
-    // New method to check registration status
     async checkRegistrationStatus(registrationId) {
         try {
             const response = await fetch(this.scriptUrl, {
@@ -116,7 +113,7 @@ class RegistrationForm {
     setupRulesToggle() {
         this.elements.rulesHeaders.forEach(header => {
             header.addEventListener('click', (e) => {
-                const contentId = e.currentTarget.getAttribute('onclick').match(/'([^']+)'/)[1];
+                const contentId = e.currentTarget.getAttribute('data-target');
                 const content = document.getElementById(contentId);
                 const icon = e.currentTarget.querySelector('i');
                 
@@ -124,7 +121,6 @@ class RegistrationForm {
                 icon.classList.toggle('fa-chevron-down');
                 icon.classList.toggle('fa-chevron-up');
                 
-                // Smooth height transition
                 if (content.classList.contains('active')) {
                     content.style.maxHeight = content.scrollHeight + 'px';
                 } else {
@@ -456,7 +452,6 @@ class RegistrationForm {
             
             this.scrollToElement(this.elements.alerts.success, 600);
             
-            // Store registration ID in localStorage
             if (response.details.registrationId) {
                 localStorage.setItem('lastRegistrationId', response.details.registrationId);
             }
