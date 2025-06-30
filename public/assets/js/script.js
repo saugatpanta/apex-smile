@@ -6,8 +6,7 @@ class RegistrationForm {
             currentRegistration: null
         };
         this.init();
-        this.scrollPosition = 0;
-        this.scriptUrl = 'YOUR_GOOGLE_SCRIPT_WEB_APP_URL'; // Replace with your deployed URL
+        this.scriptUrl = process.env.NEXT_PUBLIC_SCRIPT_URL;
     }
 
     init() {
@@ -57,12 +56,10 @@ class RegistrationForm {
         this.elements.newRegBtn?.addEventListener('click', () => this.resetForm());
         this.elements.downloadReceiptBtn?.addEventListener('click', () => this.generateReceipt());
         
-        // Add real-time validation
         this.setupRealTimeValidation();
     }
 
     setupRealTimeValidation() {
-        // For name fields
         document.getElementById('interName')?.addEventListener('input', (e) => {
             this.validateField(e.target, 'interNameError', (value) => value.length >= 2);
         });
@@ -71,7 +68,6 @@ class RegistrationForm {
             this.validateField(e.target, 'intraNameError', (value) => value.length >= 2);
         });
         
-        // For email fields
         document.getElementById('interEmail')?.addEventListener('input', (e) => {
             this.validateField(e.target, 'interEmailError', (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
         });
@@ -80,7 +76,6 @@ class RegistrationForm {
             this.validateField(e.target, 'intraEmailError', (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
         });
         
-        // For contact fields
         document.getElementById('interContact')?.addEventListener('input', (e) => {
             this.validateField(e.target, 'interContactError', (value) => /^[0-9]{10,15}$/.test(value));
         });
@@ -89,7 +84,6 @@ class RegistrationForm {
             this.validateField(e.target, 'intraContactError', (value) => /^[0-9]{10,15}$/.test(value));
         });
         
-        // For other fields
         document.getElementById('interAddress')?.addEventListener('input', (e) => {
             this.validateField(e.target, 'interAddressError', (value) => value.length >= 5);
         });
@@ -145,14 +139,12 @@ class RegistrationForm {
         const file = event.target.files?.[0];
         if (!file) return;
         
-        // Validate file
         const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!validTypes.includes(file.type) || file.size > 5 * 1024 * 1024) {
             this.showAlert('Invalid file (5MB max, JPEG/PNG/GIF/WebP)', 'danger');
             return;
         }
         
-        // Store file
         const reader = new FileReader();
         reader.onload = (e) => {
             preview.src = e.target.result;
@@ -164,7 +156,6 @@ class RegistrationForm {
                 name: file.name
             };
             
-            // Hide payment error if file is valid
             document.getElementById(`${formType}PaymentError`).style.display = 'none';
         };
         reader.readAsDataURL(file);
@@ -174,7 +165,6 @@ class RegistrationForm {
         event.preventDefault();
         
         if (!this.validateForm(formType)) {
-            // Scroll to first error
             const firstError = event.target.querySelector('.error');
             if (firstError) {
                 firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -189,9 +179,8 @@ class RegistrationForm {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
         
-        this.elements.loadingOverlay.style.display = 'flex';
+        this.showLoadingOverlay();
         
-        // Store current registration for reference
         this.state.currentRegistration = {
             ...formData,
             formType: formType
@@ -203,6 +192,16 @@ class RegistrationForm {
         } catch (error) {
             this.handleFailure(error, formType, submitBtn);
         }
+    }
+
+    showLoadingOverlay() {
+        this.elements.loadingOverlay.innerHTML = `
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p>Processing your registration...</p>
+            </div>
+        `;
+        this.elements.loadingOverlay.style.display = 'flex';
     }
 
     async submitToBackend(formData) {
@@ -218,14 +217,16 @@ class RegistrationForm {
                 })
             });
             
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+            const data = await response.json();
+            
+            if (!response.ok || data.status === 'error') {
+                throw new Error(data.message || 'Unknown error occurred');
             }
             
-            return await response.json();
+            return data;
         } catch (error) {
             console.error('Error:', error);
-            throw error;
+            throw new Error(`Failed to submit registration: ${error.message}`);
         }
     }
 
@@ -279,7 +280,7 @@ class RegistrationForm {
     }
 
     requiresPaymentProof(formType, competitionType) {
-        return true; // All competitions now require payment proof
+        return true;
     }
 
     validateForm(formType) {
@@ -331,7 +332,6 @@ class RegistrationForm {
             }
         });
         
-        // Validate payment proof
         const paymentError = document.getElementById(`${formType}PaymentError`);
         if (!this.state.formData[formType].paymentProof) {
             paymentError.style.display = 'block';
@@ -360,7 +360,6 @@ class RegistrationForm {
             });
             this.elements.formTabs.style.display = 'none';
             
-            // Scroll to success message
             this.scrollToElement(this.elements.alerts.success, 600);
         } else {
             this.showAlert('Registration successful but received unexpected response from server. Please contact support with your details.', 'warning');
@@ -392,21 +391,18 @@ class RegistrationForm {
         
         this.activateDefaultTab();
         
-        // Reset any submit buttons that might be disabled
         const submitButtons = document.querySelectorAll('button[type="submit"]');
         submitButtons.forEach(btn => {
             btn.disabled = false;
             btn.innerHTML = 'Submit Registration';
         });
         
-        // Scroll back to form
         this.scrollToElement(this.elements.container, 600);
     }
 
     switchTab(event) {
         const tabId = event.currentTarget.dataset.tab;
         
-        // Update active state for buttons
         this.elements.tabs.forEach(btn => {
             if (btn.dataset.tab === tabId) {
                 btn.classList.add('active');
@@ -415,7 +411,6 @@ class RegistrationForm {
             }
         });
         
-        // Update visibility for contents
         this.elements.tabContents.forEach(content => {
             if (content.id === tabId) {
                 content.classList.add('active');
@@ -426,7 +421,6 @@ class RegistrationForm {
             }
         });
         
-        // Smooth scroll to the form container
         this.scrollToElement(this.elements.container, 400);
     }
 
@@ -479,7 +473,6 @@ class RegistrationForm {
         alertBox.className = `alert alert-${type}`;
         alertBox.style.display = 'block';
         
-        // Scroll to alert
         this.scrollToElement(alertBox, 300);
         
         setTimeout(() => {
@@ -491,15 +484,12 @@ class RegistrationForm {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // Add logo
         doc.addImage('https://i.postimg.cc/ctKSwrkj/Smile-logo.png', 'PNG', 85, 15, 40, 40);
         
-        // Add title
         doc.setFontSize(20);
         doc.setTextColor(108, 92, 231);
         doc.text('Apex Smile Festival 2025', 105, 65, { align: 'center' });
         
-        // Add registration details
         doc.setFontSize(14);
         doc.setTextColor(0, 0, 0);
         doc.text('Registration Receipt', 105, 75, { align: 'center' });
@@ -512,27 +502,16 @@ class RegistrationForm {
         doc.text(`Competition: ${this.state.currentRegistration.competitionType}`, 20, 130);
         doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 140);
         
-        // Add footer
         doc.setFontSize(10);
         doc.setTextColor(100, 100, 100);
         doc.text('Thank you for registering!', 105, 180, { align: 'center' });
         doc.text('Present this receipt at the event entrance', 105, 185, { align: 'center' });
         
-        // Save the PDF
         doc.save(`ApexSmileFestival_${this.elements.alerts.registrationId.textContent}.pdf`);
     }
 }
 
-// Toggle rules sections
-function toggleRules(id) {
-    const rulesContent = document.getElementById(id);
-    const icon = rulesContent.previousElementSibling.querySelector('i');
-    
-    rulesContent.classList.toggle('active');
-    icon.classList.toggle('fa-chevron-down');
-    icon.classList.toggle('fa-chevron-up');
-}
-
+// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new RegistrationForm();
 });
