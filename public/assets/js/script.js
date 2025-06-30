@@ -41,10 +41,12 @@ class RegistrationForm {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Origin': window.location.origin
                 },
                 body: JSON.stringify({
                     action: 'getRegistrationDetails',
-                    registrationId: registrationId
+                    registrationId: registrationId,
+                    __reqOrigin: window.location.origin
                 })
             });
 
@@ -277,14 +279,32 @@ class RegistrationForm {
 
     async submitToBackend(formData) {
         try {
+            // First make an OPTIONS request to check CORS
+            try {
+                await fetch(this.scriptUrl, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+            } catch (optionsError) {
+                console.warn('OPTIONS request failed, proceeding anyway:', optionsError);
+            }
+
+            // Then make the actual POST request
             const response = await fetch(this.scriptUrl, {
                 method: 'POST',
+                mode: 'cors',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Origin': window.location.origin
                 },
                 body: JSON.stringify({
                     action: 'submitRegistration',
-                    formData: formData
+                    formData: formData,
+                    __reqOrigin: window.location.origin
                 })
             });
             
@@ -299,13 +319,7 @@ class RegistrationForm {
                 throw new Error(errorMessage);
             }
             
-            const data = await response.json();
-            
-            if (data.status === 'error') {
-                throw new Error(data.message || 'Registration failed');
-            }
-            
-            return data;
+            return await response.json();
         } catch (error) {
             console.error('Submission error:', error);
             throw new Error(`Failed to submit registration: ${error.message}`);
