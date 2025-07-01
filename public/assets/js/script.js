@@ -703,21 +703,27 @@ resetForm() {
         window.requestAnimationFrame(scrollStep);
     }
 
-    handleCompetitionChange(event) {
-        const form = event.target.closest('form');
-        if (!form) return;
-        
-        const formType = form.id.replace('Form', '');
-        const paymentMethods = form.querySelectorAll('.payment-method');
-        
-        paymentMethods.forEach(method => {
-            method.classList.remove('active');
-        });
-        
-        const methodId = `${formType}${event.target.value.replace(/\s+/g, '')}Payment`;
-        const methodElement = document.getElementById(methodId);
-        if (methodElement) methodElement.classList.add('active');
-    }
+handleCompetitionChange(event) {
+    const form = event.target.closest('form');
+    if (!form) return;
+    
+    const formType = form.id.replace('Form', '');
+    const competitionType = event.target.value;
+    
+    // Hide all payment options first
+    const paymentMethods = form.querySelectorAll('.payment-option');
+    paymentMethods.forEach(method => {
+        method.classList.remove('active');
+    });
+    
+    // Show the relevant payment option based on competition type
+    const methodId = `${formType}${competitionType.replace(/\s+/g, '')}Payment`;
+    const methodElement = document.getElementById(methodId);
+    if (methodElement) methodElement.classList.add('active');
+    
+    // Also update the price display if needed
+    this.updatePriceDisplay(formType, competitionType);
+}
 showAlert(message, type) {
     const alertBox = this.elements.alerts.box;
     if (!alertBox) return;
