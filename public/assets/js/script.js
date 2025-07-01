@@ -661,22 +661,42 @@ class RegistrationForm {
         const methodElement = document.getElementById(methodId);
         if (methodElement) methodElement.classList.add('active');
     }
-
-    showAlert(message, type) {
-        const alertBox = this.elements.alerts.box;
-        if (!alertBox) return;
+showAlert(message, type) {
+    const alertBox = this.elements.alerts.box;
+    if (!alertBox) return;
+    
+    // Clear any existing timeout to prevent multiple timeouts running
+    if (this.alertTimeout) {
+        clearTimeout(this.alertTimeout);
+    }
+    
+    // Set the alert content and styling
+    alertBox.innerHTML = `
+        <i class="fas ${type === 'danger' ? 'fa-exclamation-circle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i>
+        <div class="alert-message">${message}</div>
+    `;
+    alertBox.className = `alert alert-${type}`;
+    
+    // Reset animation and show the alert
+    alertBox.style.animation = 'none';
+    alertBox.offsetHeight; // Trigger reflow
+    alertBox.style.display = 'flex';
+    alertBox.style.animation = 'slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+    
+    this.scrollToElement(alertBox, 300);
+    
+    // Set timeout to hide the alert after 5 seconds
+    this.alertTimeout = setTimeout(() => {
+        // Add fade out animation
+        alertBox.style.animation = 'fadeOut 0.5s ease forwards';
         
-        alertBox.textContent = message;
-        alertBox.className = `alert alert-${type}`;
-        alertBox.style.display = 'block';
-        
-        this.scrollToElement(alertBox, 300);
-        
+        // Wait for animation to complete before hiding
         setTimeout(() => {
             alertBox.style.display = 'none';
-        }, 5000);
-    }
-
+            alertBox.style.animation = '';
+        }, 500);
+    }, 3500);
+}
     generateReceipt() {
         if (!window.jspdf || !this.elements.alerts.registrationId || !this.state.currentRegistration) {
             this.showAlert('PDF generation library not loaded. Please try again later.', 'danger');
