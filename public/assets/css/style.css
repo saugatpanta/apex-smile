@@ -1476,7 +1476,7 @@ footer p {
   display: none;
   font-weight: 500;
   padding-left: var(--space-sm);
-  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97);
+  animation: shake 4s cubic-bezier(.36,.07,.19,.97);
 }
 
 @keyframes shake {
@@ -1489,7 +1489,7 @@ footer p {
 input.error, select.error {
   border-color: var(--danger);
   box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
-  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97);
+  animation: shake 4s cubic-bezier(.36,.07,.19,.97);
 }
 
 /* === MODERN POPUP STYLES === */
