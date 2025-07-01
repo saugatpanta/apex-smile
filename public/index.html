@@ -74,7 +74,7 @@
 
         <!-- Rules Section -->
         <div class="rules-container">
-            <div class="rules-header" onclick="toggleRules('liveArtRules')">
+            <div class="rules-header" data-target="liveArtRules">
                 <h3>Live Art Competition – Rules & Regulations</h3>
                 <i class="fas fa-chevron-down"></i>
             </div>
@@ -92,7 +92,7 @@
         </div>
 
         <div class="rules-container">
-            <div class="rules-header" onclick="toggleRules('photographyRules')">
+            <div class="rules-header" data-target="photographyRules">
                 <h3>Photography Competition – Rules & Regulations</h3>
                 <i class="fas fa-chevron-down"></i>
             </div>
@@ -166,7 +166,7 @@
                     <div class="payment-info">
                         <div class="payment-method active" id="interLiveArtPayment">
                             <h4>Live Art</h4>
-                            <div class="price">Rs. 1000</div>
+                            <div class="price">1000</div>
                             <div class="qr-container">
                                 <div class="payment-info-title">Scan to pay</div>
                                 <img src='https://i.postimg.cc/85Vpj4wp/Whats-App-Image-2025-06-22-at-17-40-20-c8c24247.jpg' border='0' alt='eSewa QR Code' class="qr-code" />
@@ -175,7 +175,7 @@
                         </div>
                         <div class="payment-method" id="interPhotographyPayment">
                             <h4>Photography</h4>
-                            <div class="price">Rs. 250</div>
+                            <div class="price">250</div>
                             <div class="qr-container">
                                 <div class="payment-info-title">Scan to pay</div>
                                 <img src='https://i.postimg.cc/85Vpj4wp/Whats-App-Image-2025-06-22-at-17-40-20-c8c24247.jpg' border='0' alt='eSewa QR Code' class="qr-code" />
@@ -184,7 +184,7 @@
                         </div>
                         <div class="payment-method" id="interBothPayment">
                             <h4>Both Competitions</h4>
-                            <div class="price">Rs. 1250</div>
+                            <div class="price">1250</div>
                             <div class="qr-container">
                                 <div class="payment-info-title">Scan to pay</div>
                                 <img src='https://i.postimg.cc/85Vpj4wp/Whats-App-Image-2025-06-22-at-17-40-20-c8c24247.jpg' border='0' alt='eSewa QR Code' class="qr-code" />
@@ -281,7 +281,7 @@
                     <div class="payment-info">
                         <div class="payment-method active" id="intraLiveArtPayment">
                             <h4>Live Art</h4>
-                            <div class="price">Rs. 1000</div>
+                            <div class="price">1000</div>
                             <div class="qr-container">
                                 <div class="payment-info-title">Scan to pay</div>
                                 <img src='https://i.postimg.cc/85Vpj4wp/Whats-App-Image-2025-06-22-at-17-40-20-c8c24247.jpg' border='0' alt='eSewa QR Code' class="qr-code" />
@@ -290,7 +290,7 @@
                         </div>
                         <div class="payment-method" id="intraPhotographyPayment">
                             <h4>Photography</h4>
-                            <div class="price">Rs. 100</div>
+                            <div class="price">100</div>
                             <div class="qr-container">
                                 <div class="payment-info-title">Scan to pay</div>
                                 <img src='https://i.postimg.cc/85Vpj4wp/Whats-App-Image-2025-06-22-at-17-40-20-c8c24247.jpg' border='0' alt='eSewa QR Code' class="qr-code" />
@@ -299,7 +299,7 @@
                         </div>
                         <div class="payment-method" id="intraBothPayment">
                             <h4>Both Competitions</h4>
-                            <div class="price">Rs. 1100</div>
+                            <div class="price">1100</div>
                             <div class="qr-container">
                                 <div class="payment-info-title">Scan to pay</div>
                                 <img src='https://i.postimg.cc/85Vpj4wp/Whats-App-Image-2025-06-22-at-17-40-20-c8c24247.jpg' border='0' alt='eSewa QR Code' class="qr-code" />
@@ -327,13 +327,32 @@
         
         <footer>
             <p>&copy; Apex Smile Festival 2025. All rights reserved.</p>
-            <p>Contact: mediaclub@apexcollege.edu.np | Phone: +977 9840530506</p>
+            <p>Contact: apexmediaandmarketing@apexcollege.edu.np | Phone: +977 9840530506</p>
             <div class="social-links">
                 <a href="https://www.instagram.com/apexmediamarketingclub/" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
                 <a href="https://www.facebook.com/apexmediaclub" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a>
                 <a href="https://www.tiktok.com/@apexmediamarketingclub?_t=ZS-8xVHULdLJ2H&_r=1" target="_blank" title="TikTok"><i class="fab fa-tiktok"></i></a>
             </div>
         </footer>
+    </div>
+
+    <!-- Popup Modal Structure -->
+    <div class="modal-overlay" id="popupModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalCloseBtn">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-header">
+                <h2 id="popupTitle">Important Information</h2>
+            </div>
+            <div class="modal-body" id="popupContent">
+                <!-- Content will be inserted here dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="popupCancelBtn">Cancel</button>
+                <button class="btn btn-primary" id="popupConfirmBtn">Confirm</button>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
