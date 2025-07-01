@@ -218,7 +218,7 @@ body {
   background: linear-gradient(to right, var(--lighter), var(--accent));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 4px 20px rgba(76, 201, 240, 0.3));
+  text-shadow: 0 4px 20px rgba(76, 201, 240, 0.3);
   line-height: 1.2;
 }
 
@@ -1520,6 +1520,58 @@ input.error, select.error {
   .footer-content {
     grid-template-columns: 1fr;
     gap: var(--space-xl);
+  }
+}
+
+/* === ACCESSIBILITY IMPROVEMENTS === */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* === IOS SPECIFIC FIXES === */
+@supports (-webkit-touch-callout: none) {
+  /* Fix for iOS input zoom */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+  
+  /* Fix for sticky hover effects on iOS */
+  .btn:hover, .btn:active {
+    transform: none;
+  }
+  
+  /* Fix for input field styling */
+  input, select, textarea {
+    -webkit-appearance: none;
+    border-radius: var(--radius);
+  }
+}
+
+/* === ANDROID SPECIFIC FIXES === */
+@supports (-webkit-overflow-scrolling: touch) {
+  /* Fix for Android input zoom */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+  
+  /* Fix for Android tap highlight */
+  a, button, input, textarea, select {
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
   }
 }
 
