@@ -601,45 +601,53 @@ handleFileUpload(event, formType, preview, previewContainer) {
         }
     }
 
-    resetForm() {
-        ['inter', 'intra'].forEach(formType => {
-            const form = this.elements.forms[formType];
-            if (form) form.reset();
-            
-            const preview = document.getElementById(`${formType}FilePreview`);
-            if (preview) {
-                preview.style.display = 'none';
-                preview.src = '';
-            }
-            
-            const fileInput = document.getElementById(`${formType}PaymentProof`);
-            if (fileInput) fileInput.value = '';
-            
-            this.state.formData[formType] = {};
-        });
+resetForm() {
+    ['inter', 'intra'].forEach(formType => {
+        const form = this.elements.forms[formType];
+        if (form) form.reset();
         
-        if (this.elements.alerts.success) {
-            this.elements.alerts.success.style.display = 'none';
+        const preview = document.getElementById(`${formType}FilePreview`);
+        const previewContainer = preview?.parentElement;
+        if (preview) {
+            preview.src = '';
+            preview.style.display = 'none';
         }
-        if (this.elements.formTabs) {
-            this.elements.formTabs.style.display = 'flex';
-        }
-        if (this.elements.tabContents) {
-            this.elements.tabContents.forEach(content => {
-                content.style.display = 'none';
-            });
+        if (previewContainer) {
+            previewContainer.style.display = 'none';
         }
         
-        this.activateDefaultTab();
+        const fileInput = document.getElementById(`${formType}PaymentProof`);
+        if (fileInput) fileInput.value = '';
         
-        const submitButtons = document.querySelectorAll('button[type="submit"]');
-        submitButtons.forEach(btn => {
-            btn.disabled = false;
-            btn.innerHTML = 'Submit Registration';
-        });
+        // Clear the clear button visibility
+        const clearBtn = document.getElementById(`${formType}ClearFile`);
+        if (clearBtn) clearBtn.style.display = 'none';
         
-        this.scrollToElement(this.elements.container, 600);
+        this.state.formData[formType] = {};
+    });
+    
+    if (this.elements.alerts.success) {
+        this.elements.alerts.success.style.display = 'none';
     }
+    if (this.elements.formTabs) {
+        this.elements.formTabs.style.display = 'flex';
+    }
+    if (this.elements.tabContents) {
+        this.elements.tabContents.forEach(content => {
+            content.style.display = 'none';
+        });
+    }
+    
+    this.activateDefaultTab();
+    
+    const submitButtons = document.querySelectorAll('button[type="submit"]');
+    submitButtons.forEach(btn => {
+        btn.disabled = false;
+        btn.innerHTML = 'Submit Registration';
+    });
+    
+    this.scrollToElement(this.elements.container, 600);
+}
 
     switchTab(event) {
         const tabId = event.currentTarget.dataset.tab;
