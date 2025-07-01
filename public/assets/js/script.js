@@ -7,6 +7,10 @@ class RegistrationForm {
         };
         
         this.scriptUrl = 'https://script.google.com/macros/s/AKfycbwcNYJlfoKARbY3Xn6W--EXr-_pWKGW6oJhGHhy6baJuDN4PYnb_YGGWuhD3iRMu43t9Q/exec';
+        this.popupCallbacks = {
+            confirm: null,
+            cancel: null
+        };
         
         this.init();
     }
@@ -89,7 +93,13 @@ class RegistrationForm {
             formTabs: document.getElementById('formTabs'),
             container: document.querySelector('.container'),
             rulesHeaders: document.querySelectorAll('.rules-header'),
-            rulesContents: document.querySelectorAll('.rules-content')
+            rulesContents: document.querySelectorAll('.rules-content'),
+            popupModal: document.getElementById('popupModal'),
+            popupTitle: document.getElementById('popupTitle'),
+            popupContent: document.getElementById('popupContent'),
+            popupConfirmBtn: document.getElementById('popupConfirmBtn'),
+            popupCancelBtn: document.getElementById('popupCancelBtn'),
+            modalCloseBtn: document.getElementById('modalCloseBtn')
         };
     }
 
@@ -111,45 +121,44 @@ class RegistrationForm {
         this.setupRealTimeValidation();
     }
 
-   // Add this new method to handle rules toggle
-setupRulesToggle() {
-    const rulesHeaders = document.querySelectorAll('.rules-header');
-    
-    rulesHeaders.forEach(header => {
-        // Remove any existing onclick handlers to prevent conflicts
-        header.removeAttribute('onclick');
-        
-        // Find the corresponding content element
-        const icon = header.querySelector('i');
-        const content = header.nextElementSibling;
-        
-        // Initialize state
-        if (content && content.classList.contains('rules-content')) {
+    setupRulesToggle() {
+        const rulesHeaders = document.querySelectorAll('.rules-header');
+        const rulesContents = document.querySelectorAll('.rules-content');
+
+        rulesContents.forEach(content => {
             content.style.maxHeight = '0';
             content.style.overflow = 'hidden';
             content.style.transition = 'max-height 0.3s ease-out';
-            
-            // Add click event listener
+        });
+
+        rulesHeaders.forEach(header => {
             header.addEventListener('click', () => {
-                // Toggle the active class
+                const contentId = header.getAttribute('data-target') || 
+                                 header.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+                if (!contentId) return;
+                
+                const content = document.getElementById(contentId);
+                if (!content) return;
+                
+                const icon = header.querySelector('i');
+                
                 content.classList.toggle('active');
                 
-                // Toggle the icon
                 if (icon) {
                     icon.classList.toggle('fa-chevron-down');
                     icon.classList.toggle('fa-chevron-up');
                 }
                 
-                // Toggle the content visibility
                 if (content.classList.contains('active')) {
                     content.style.maxHeight = content.scrollHeight + 'px';
                 } else {
                     content.style.maxHeight = '0';
                 }
             });
-        }
-    });
-}
+
+            header.removeAttribute('onclick');
+        });
+    }
 
     setupRealTimeValidation() {
         document.getElementById('interName')?.addEventListener('input', (e) => {
@@ -261,36 +270,45 @@ setupRulesToggle() {
     async handleSubmit(event, formType) {
         event.preventDefault();
         
-        if (!this.validateForm(formType)) {
-            const firstError = event.target.querySelector('.error');
-            if (firstError) {
-                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        this.showPopup(
+            'Confirm Registration',
+            'Are you sure you want to submit your registration? Please verify all information is correct.',
+            async () => {
+                if (!this.validateForm(formType)) {
+                    const firstError = event.target.querySelector('.error');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return;
+                }
+                
+                const formData = this.gatherFormData(formType);
+                this.processPaymentProof(formData, formType);
+                
+                const submitBtn = event.target.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                }
+                
+                this.showLoadingOverlay();
+                
+                this.state.currentRegistration = {
+                    ...formData,
+                    formType: formType
+                };
+                
+                try {
+                    const result = await this.submitToBackend(formData);
+                    this.handleSuccess(result, formType, submitBtn);
+                } catch (error) {
+                    this.handleFailure(error, formType, submitBtn);
+                }
+            },
+            () => {
+                this.showAlert('Registration cancelled', 'info');
             }
-            return;
-        }
-        
-        const formData = this.gatherFormData(formType);
-        this.processPaymentProof(formData, formType);
-        
-        const submitBtn = event.target.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        }
-        
-        this.showLoadingOverlay();
-        
-        this.state.currentRegistration = {
-            ...formData,
-            formType: formType
-        };
-        
-        try {
-            const result = await this.submitToBackend(formData);
-            this.handleSuccess(result, formType, submitBtn);
-        } catch (error) {
-            this.handleFailure(error, formType, submitBtn);
-        }
+        );
     }
 
     showLoadingOverlay() {
@@ -307,7 +325,6 @@ setupRulesToggle() {
 
     async submitToBackend(formData) {
         try {
-            // First try with CORS mode
             let response;
             try {
                 response = await fetch(this.scriptUrl, {
@@ -323,7 +340,6 @@ setupRulesToggle() {
                 });
             } catch (corsError) {
                 console.log('CORS request failed, trying no-cors mode');
-                // Fallback to no-cors if CORS fails
                 response = await fetch(this.scriptUrl, {
                     method: 'POST',
                     headers: {
@@ -336,7 +352,6 @@ setupRulesToggle() {
                     mode: 'no-cors'
                 });
                 
-                // With no-cors we can't read the response, so we assume success
                 return {
                     status: 'success',
                     details: {
@@ -529,7 +544,6 @@ setupRulesToggle() {
             
             this.scrollToElement(this.elements.alerts.success, 600);
             
-            // Store registration ID in localStorage
             if (response.details.registrationId) {
                 localStorage.setItem('lastRegistrationId', response.details.registrationId);
             }
@@ -602,8 +616,6 @@ setupRulesToggle() {
                 }
             });
         }
-        
-        this.scrollToElement(this.elements.container, 400);
     }
 
     scrollToElement(element, duration = 400) {
@@ -704,9 +716,43 @@ setupRulesToggle() {
             this.showAlert('Failed to generate receipt. Please try again.', 'danger');
         }
     }
+
+    showPopup(title, content, confirmCallback = null, cancelCallback = null) {
+        this.elements.popupTitle.textContent = title;
+        this.elements.popupContent.innerHTML = content;
+
+        this.popupCallbacks.confirm = confirmCallback;
+        this.popupCallbacks.cancel = cancelCallback;
+
+        this.elements.popupConfirmBtn.style.display = confirmCallback ? 'flex' : 'none';
+        this.elements.popupCancelBtn.style.display = cancelCallback ? 'flex' : 'none';
+
+        this.elements.popupModal.classList.add('active');
+
+        const hideModal = () => this.elements.popupModal.classList.remove('active');
+        
+        if (confirmCallback) {
+            this.elements.popupConfirmBtn.onclick = () => {
+                confirmCallback();
+                hideModal();
+            };
+        }
+
+        if (cancelCallback) {
+            this.elements.popupCancelBtn.onclick = () => {
+                if (cancelCallback) cancelCallback();
+                hideModal();
+            };
+        }
+
+        this.elements.modalCloseBtn.onclick = hideModal;
+    }
+
+    hidePopup() {
+        this.elements.popupModal.classList.remove('active');
+    }
 }
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new RegistrationForm();
 });
