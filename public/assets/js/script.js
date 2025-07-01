@@ -121,44 +121,55 @@ class RegistrationForm {
         this.setupRealTimeValidation();
     }
 
-    setupRulesToggle() {
-        const rulesHeaders = document.querySelectorAll('.rules-header');
-        const rulesContents = document.querySelectorAll('.rules-content');
+setupRulesToggle() {
+    const rulesHeaders = document.querySelectorAll('.accordion-header');
+    const rulesContents = document.querySelectorAll('.accordion-content');
 
-        rulesContents.forEach(content => {
-            content.style.maxHeight = '0';
-            content.style.overflow = 'hidden';
-            content.style.transition = 'max-height 0.3s ease-out';
-        });
+    rulesContents.forEach(content => {
+        content.style.maxHeight = '0';
+        content.style.overflow = 'hidden';
+        content.style.transition = 'max-height 0.3s ease-out';
+    });
 
-        rulesHeaders.forEach(header => {
-            header.addEventListener('click', () => {
-                const contentId = header.getAttribute('data-target') || 
-                                 header.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-                if (!contentId) return;
-                
-                const content = document.getElementById(contentId);
-                if (!content) return;
-                
-                const icon = header.querySelector('i');
-                
-                content.classList.toggle('active');
-                
-                if (icon) {
-                    icon.classList.toggle('fa-chevron-down');
-                    icon.classList.toggle('fa-chevron-up');
-                }
-                
-                if (content.classList.contains('active')) {
-                    content.style.maxHeight = content.scrollHeight + 'px';
-                } else {
-                    content.style.maxHeight = '0';
+    rulesHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const content = header.nextElementSibling;
+            if (!content || !content.classList.contains('accordion-content')) return;
+            
+            const icon = header.querySelector('.fa-chevron-down');
+            
+            // Toggle the active state
+            const isActive = content.classList.toggle('active');
+            
+            if (icon) {
+                icon.classList.toggle('fa-chevron-down');
+                icon.classList.toggle('fa-chevron-up');
+            }
+            
+            if (isActive) {
+                content.style.maxHeight = content.scrollHeight + 'px';
+            } else {
+                content.style.maxHeight = '0';
+            }
+            
+            // Close other accordion items
+            rulesContents.forEach(otherContent => {
+                if (otherContent !== content && otherContent.classList.contains('active')) {
+                    otherContent.classList.remove('active');
+                    otherContent.style.maxHeight = '0';
+                    const otherHeader = otherContent.previousElementSibling;
+                    if (otherHeader) {
+                        const otherIcon = otherHeader.querySelector('.fa-chevron-up');
+                        if (otherIcon) {
+                            otherIcon.classList.remove('fa-chevron-up');
+                            otherIcon.classList.add('fa-chevron-down');
+                        }
+                    }
                 }
             });
-
-            header.removeAttribute('onclick');
         });
-    }
+    });
+}
 
     setupRealTimeValidation() {
         document.getElementById('interName')?.addEventListener('input', (e) => {
@@ -224,48 +235,86 @@ class RegistrationForm {
         }
     }
 
-    setupFileUploads() {
-        ['inter', 'intra'].forEach(formType => {
-            const area = this.elements.uploads[formType];
-            const input = document.getElementById(`${formType}PaymentProof`);
-            const preview = document.getElementById(`${formType}FilePreview`);
-            
-            if (!area || !input || !preview) return;
-            
-            area.addEventListener('click', () => input.click());
-            
-            input.addEventListener('change', (e) => {
-                this.handleFileUpload(e, formType, preview);
-            });
+setupFileUploads() {
+    ['inter', 'intra'].forEach(formType => {
+        const area = this.elements.uploads[formType];
+        const input = document.getElementById(`${formType}PaymentProof`);
+        const preview = document.getElementById(`${formType}FilePreview`);
+        const previewContainer = preview?.parentElement;
+        const clearBtn = document.getElementById(`${formType}ClearFile`);
+        
+        if (!area || !input || !preview || !previewContainer || !clearBtn) return;
+        
+        // Initially hide the preview container
+        previewContainer.style.display = 'none';
+        
+        area.addEventListener('click', () => input.click());
+        
+        input.addEventListener('change', (e) => {
+            this.handleFileUpload(e, formType, preview, previewContainer);
         });
-    }
+        
+        // Clear button click handler
+        clearBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.clearFileUpload(formType, input, preview, previewContainer);
+        });
+    });
+}
 
-    handleFileUpload(event, formType, preview) {
-        const file = event.target.files?.[0];
-        if (!file) return;
-        
-        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!validTypes.includes(file.type) || file.size > 5 * 1024 * 1024) {
-            this.showAlert('Invalid file (5MB max, JPEG/PNG/GIF/WebP)', 'danger');
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-            
-            this.state.formData[formType].paymentProof = {
-                data: e.target.result.split(',')[1],
-                type: file.type,
-                name: file.name
-            };
-            
-            const paymentError = document.getElementById(`${formType}PaymentError`);
-            if (paymentError) paymentError.style.display = 'none';
-        };
-        reader.readAsDataURL(file);
+clearFileUpload(formType, input, preview, previewContainer) {
+    // Reset the file input
+    input.value = '';
+    
+    // Reset preview
+    preview.src = '';
+    previewContainer.style.display = 'none';
+    
+    // Remove from state
+    if (this.state.formData[formType]) {
+        delete this.state.formData[formType].paymentProof;
     }
+    
+    // Hide error if visible
+    const paymentError = document.getElementById(`${formType}PaymentError`);
+    if (paymentError) {
+        paymentError.style.display = 'none';
+    }
+}
+
+handleFileUpload(event, formType, preview, previewContainer) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type) || file.size > 5 * 1024 * 1024) {
+        this.showAlert('Invalid file (5MB max, JPEG/PNG/GIF/WebP)', 'danger');
+        this.clearFileUpload(formType, event.target, preview, previewContainer);
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        preview.src = e.target.result;
+        previewContainer.style.display = 'block';
+        
+        this.state.formData[formType] = this.state.formData[formType] || {};
+        this.state.formData[formType].paymentProof = {
+            data: e.target.result.split(',')[1],
+            type: file.type,
+            name: file.name
+        };
+        
+        const paymentError = document.getElementById(`${formType}PaymentError`);
+        if (paymentError) paymentError.style.display = 'none';
+    };
+    reader.onerror = () => {
+        this.showAlert('Error reading file. Please try again.', 'danger');
+        this.clearFileUpload(formType, event.target, preview, previewContainer);
+    };
+    reader.readAsDataURL(file);
+}
 
     async handleSubmit(event, formType) {
         event.preventDefault();
@@ -618,7 +667,7 @@ class RegistrationForm {
         }
     }
 
-    scrollToElement(element, duration = 400) {
+    scrollToElement(element, duration = 5000) {
         if (!element) return;
         
         const header = document.querySelector('header');
