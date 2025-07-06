@@ -92,8 +92,6 @@ class RegistrationForm {
             loadingOverlay: document.getElementById('loadingOverlay'),
             formTabs: document.getElementById('formTabs'),
             container: document.querySelector('.container'),
-            rulesHeaders: document.querySelectorAll('.rules-header'),
-            rulesContents: document.querySelectorAll('.rules-content'),
             popupModal: document.getElementById('popupModal'),
             popupTitle: document.getElementById('popupTitle'),
             popupContent: document.getElementById('popupContent'),
@@ -179,6 +177,20 @@ class RegistrationForm {
         });
     }
 
+    updatePrizeDisplay(tabId) {
+        if (!this.elements.prizeSections) return;
+        
+        if (tabId === 'inter') {
+            this.elements.prizeSections.inter.style.display = 'flex';
+            this.elements.prizeSections.intra.style.display = 'none';
+            this.elements.prizeSections.label.textContent = 'Inter';
+        } else {
+            this.elements.prizeSections.inter.style.display = 'none';
+            this.elements.prizeSections.intra.style.display = 'flex';
+            this.elements.prizeSections.label.textContent = 'Intra';
+        }
+    }
+
     setupRealTimeValidation() {
         document.getElementById('interName')?.addEventListener('input', (e) => {
             this.validateField(e.target, 'interNameError', (value) => value.length >= 2);
@@ -241,20 +253,6 @@ class RegistrationForm {
         if (defaultTab) {
             this.switchTab({ currentTarget: defaultTab });
             this.updatePrizeDisplay('inter');
-        }
-    }
-
-    updatePrizeDisplay(tabId) {
-        if (!this.elements.prizeSections) return;
-        
-        if (tabId === 'inter') {
-            this.elements.prizeSections.inter.style.display = 'flex';
-            this.elements.prizeSections.intra.style.display = 'none';
-            this.elements.prizeSections.label.textContent = 'Inter';
-        } else {
-            this.elements.prizeSections.inter.style.display = 'none';
-            this.elements.prizeSections.intra.style.display = 'flex';
-            this.elements.prizeSections.label.textContent = 'Intra';
         }
     }
 
@@ -746,6 +744,11 @@ class RegistrationForm {
         
         // Also update the price display if needed
         this.updatePriceDisplay(formType, competitionType);
+    }
+
+    updatePriceDisplay(formType, competitionType) {
+        // This method can be used if you need to update any price displays
+        // Currently handled by CSS with the active class
     }
 
     showAlert(message, type) {
