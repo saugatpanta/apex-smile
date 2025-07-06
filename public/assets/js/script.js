@@ -99,13 +99,21 @@ class RegistrationForm {
             popupContent: document.getElementById('popupContent'),
             popupConfirmBtn: document.getElementById('popupConfirmBtn'),
             popupCancelBtn: document.getElementById('popupCancelBtn'),
-            modalCloseBtn: document.getElementById('modalCloseBtn')
+            modalCloseBtn: document.getElementById('modalCloseBtn'),
+            prizeSections: {
+                inter: document.getElementById('interPrizeCards'),
+                intra: document.getElementById('intraPrizeCards'),
+                label: document.getElementById('prizeTypeLabel')
+            }
         };
     }
 
     bindEvents() {
         this.elements.tabs.forEach(btn => {
-            btn.addEventListener('click', (e) => this.switchTab(e));
+            btn.addEventListener('click', (e) => {
+                this.switchTab(e);
+                this.updatePrizeDisplay(e.currentTarget.dataset.tab);
+            });
         });
 
         this.elements.forms.inter?.addEventListener('submit', (e) => this.handleSubmit(e, 'inter'));
@@ -121,55 +129,55 @@ class RegistrationForm {
         this.setupRealTimeValidation();
     }
 
-setupRulesToggle() {
-    const rulesHeaders = document.querySelectorAll('.accordion-header');
-    const rulesContents = document.querySelectorAll('.accordion-content');
+    setupRulesToggle() {
+        const rulesHeaders = document.querySelectorAll('.accordion-header');
+        const rulesContents = document.querySelectorAll('.accordion-content');
 
-    rulesContents.forEach(content => {
-        content.style.maxHeight = '0';
-        content.style.overflow = 'hidden';
-        content.style.transition = 'max-height 0.3s ease-out';
-    });
+        rulesContents.forEach(content => {
+            content.style.maxHeight = '0';
+            content.style.overflow = 'hidden';
+            content.style.transition = 'max-height 0.3s ease-out';
+        });
 
-    rulesHeaders.forEach(header => {
-        header.addEventListener('click', () => {
-            const content = header.nextElementSibling;
-            if (!content || !content.classList.contains('accordion-content')) return;
-            
-            const icon = header.querySelector('.fa-chevron-down');
-            
-            // Toggle the active state
-            const isActive = content.classList.toggle('active');
-            
-            if (icon) {
-                icon.classList.toggle('fa-chevron-down');
-                icon.classList.toggle('fa-chevron-up');
-            }
-            
-            if (isActive) {
-                content.style.maxHeight = content.scrollHeight + 'px';
-            } else {
-                content.style.maxHeight = '0';
-            }
-            
-            // Close other accordion items
-            rulesContents.forEach(otherContent => {
-                if (otherContent !== content && otherContent.classList.contains('active')) {
-                    otherContent.classList.remove('active');
-                    otherContent.style.maxHeight = '0';
-                    const otherHeader = otherContent.previousElementSibling;
-                    if (otherHeader) {
-                        const otherIcon = otherHeader.querySelector('.fa-chevron-up');
-                        if (otherIcon) {
-                            otherIcon.classList.remove('fa-chevron-up');
-                            otherIcon.classList.add('fa-chevron-down');
+        rulesHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                if (!content || !content.classList.contains('accordion-content')) return;
+                
+                const icon = header.querySelector('.fa-chevron-down');
+                
+                // Toggle the active state
+                const isActive = content.classList.toggle('active');
+                
+                if (icon) {
+                    icon.classList.toggle('fa-chevron-down');
+                    icon.classList.toggle('fa-chevron-up');
+                }
+                
+                if (isActive) {
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                } else {
+                    content.style.maxHeight = '0';
+                }
+                
+                // Close other accordion items
+                rulesContents.forEach(otherContent => {
+                    if (otherContent !== content && otherContent.classList.contains('active')) {
+                        otherContent.classList.remove('active');
+                        otherContent.style.maxHeight = '0';
+                        const otherHeader = otherContent.previousElementSibling;
+                        if (otherHeader) {
+                            const otherIcon = otherHeader.querySelector('.fa-chevron-up');
+                            if (otherIcon) {
+                                otherIcon.classList.remove('fa-chevron-up');
+                                otherIcon.classList.add('fa-chevron-down');
+                            }
                         }
                     }
-                }
+                });
             });
         });
-    });
-}
+    }
 
     setupRealTimeValidation() {
         document.getElementById('interName')?.addEventListener('input', (e) => {
@@ -232,89 +240,104 @@ setupRulesToggle() {
         const defaultTab = document.querySelector('.tab-btn[data-tab="inter"]');
         if (defaultTab) {
             this.switchTab({ currentTarget: defaultTab });
+            this.updatePrizeDisplay('inter');
         }
     }
 
-setupFileUploads() {
-    ['inter', 'intra'].forEach(formType => {
-        const area = this.elements.uploads[formType];
-        const input = document.getElementById(`${formType}PaymentProof`);
-        const preview = document.getElementById(`${formType}FilePreview`);
-        const previewContainer = preview?.parentElement;
-        const clearBtn = document.getElementById(`${formType}ClearFile`);
+    updatePrizeDisplay(tabId) {
+        if (!this.elements.prizeSections) return;
         
-        if (!area || !input || !preview || !previewContainer || !clearBtn) return;
+        if (tabId === 'inter') {
+            this.elements.prizeSections.inter.style.display = 'flex';
+            this.elements.prizeSections.intra.style.display = 'none';
+            this.elements.prizeSections.label.textContent = 'Inter';
+        } else {
+            this.elements.prizeSections.inter.style.display = 'none';
+            this.elements.prizeSections.intra.style.display = 'flex';
+            this.elements.prizeSections.label.textContent = 'Intra';
+        }
+    }
+
+    setupFileUploads() {
+        ['inter', 'intra'].forEach(formType => {
+            const area = this.elements.uploads[formType];
+            const input = document.getElementById(`${formType}PaymentProof`);
+            const preview = document.getElementById(`${formType}FilePreview`);
+            const previewContainer = preview?.parentElement;
+            const clearBtn = document.getElementById(`${formType}ClearFile`);
+            
+            if (!area || !input || !preview || !previewContainer || !clearBtn) return;
+            
+            // Initially hide the preview container
+            previewContainer.style.display = 'none';
+            
+            area.addEventListener('click', () => input.click());
+            
+            input.addEventListener('change', (e) => {
+                this.handleFileUpload(e, formType, preview, previewContainer);
+            });
+            
+            // Clear button click handler
+            clearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.clearFileUpload(formType, input, preview, previewContainer);
+            });
+        });
+    }
+
+    clearFileUpload(formType, input, preview, previewContainer) {
+        // Reset the file input
+        input.value = '';
         
-        // Initially hide the preview container
+        // Reset preview
+        preview.src = '';
         previewContainer.style.display = 'none';
         
-        area.addEventListener('click', () => input.click());
+        // Remove from state
+        if (this.state.formData[formType]) {
+            delete this.state.formData[formType].paymentProof;
+        }
         
-        input.addEventListener('change', (e) => {
-            this.handleFileUpload(e, formType, preview, previewContainer);
-        });
-        
-        // Clear button click handler
-        clearBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.clearFileUpload(formType, input, preview, previewContainer);
-        });
-    });
-}
-
-clearFileUpload(formType, input, preview, previewContainer) {
-    // Reset the file input
-    input.value = '';
-    
-    // Reset preview
-    preview.src = '';
-    previewContainer.style.display = 'none';
-    
-    // Remove from state
-    if (this.state.formData[formType]) {
-        delete this.state.formData[formType].paymentProof;
-    }
-    
-    // Hide error if visible
-    const paymentError = document.getElementById(`${formType}PaymentError`);
-    if (paymentError) {
-        paymentError.style.display = 'none';
-    }
-}
-
-handleFileUpload(event, formType, preview, previewContainer) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!validTypes.includes(file.type) || file.size > 5 * 1024 * 1024) {
-        this.showAlert('Invalid file (5MB max, JPEG/PNG/GIF/WebP)', 'danger');
-        this.clearFileUpload(formType, event.target, preview, previewContainer);
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        preview.src = e.target.result;
-        previewContainer.style.display = 'block';
-        
-        this.state.formData[formType] = this.state.formData[formType] || {};
-        this.state.formData[formType].paymentProof = {
-            data: e.target.result.split(',')[1],
-            type: file.type,
-            name: file.name
-        };
-        
+        // Hide error if visible
         const paymentError = document.getElementById(`${formType}PaymentError`);
-        if (paymentError) paymentError.style.display = 'none';
-    };
-    reader.onerror = () => {
-        this.showAlert('Error reading file. Please try again.', 'danger');
-        this.clearFileUpload(formType, event.target, preview, previewContainer);
-    };
-    reader.readAsDataURL(file);
-}
+        if (paymentError) {
+            paymentError.style.display = 'none';
+        }
+    }
+
+    handleFileUpload(event, formType, preview, previewContainer) {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type) || file.size > 5 * 1024 * 1024) {
+            this.showAlert('Invalid file (5MB max, JPEG/PNG/GIF/WebP)', 'danger');
+            this.clearFileUpload(formType, event.target, preview, previewContainer);
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            previewContainer.style.display = 'block';
+            
+            this.state.formData[formType] = this.state.formData[formType] || {};
+            this.state.formData[formType].paymentProof = {
+                data: e.target.result.split(',')[1],
+                type: file.type,
+                name: file.name
+            };
+            
+            const paymentError = document.getElementById(`${formType}PaymentError`);
+            if (paymentError) paymentError.style.display = 'none';
+        };
+        reader.onerror = () => {
+            this.showAlert('Error reading file. Please try again.', 'danger');
+            this.clearFileUpload(formType, event.target, preview, previewContainer);
+        };
+        reader.readAsDataURL(file);
+    }
 
     async handleSubmit(event, formType) {
         event.preventDefault();
@@ -601,53 +624,53 @@ handleFileUpload(event, formType, preview, previewContainer) {
         }
     }
 
-resetForm() {
-    ['inter', 'intra'].forEach(formType => {
-        const form = this.elements.forms[formType];
-        if (form) form.reset();
-        
-        const preview = document.getElementById(`${formType}FilePreview`);
-        const previewContainer = preview?.parentElement;
-        if (preview) {
-            preview.src = '';
-            preview.style.display = 'none';
-        }
-        if (previewContainer) {
-            previewContainer.style.display = 'none';
-        }
-        
-        const fileInput = document.getElementById(`${formType}PaymentProof`);
-        if (fileInput) fileInput.value = '';
-        
-        // Clear the clear button visibility
-        const clearBtn = document.getElementById(`${formType}ClearFile`);
-        if (clearBtn) clearBtn.style.display = 'none';
-        
-        this.state.formData[formType] = {};
-    });
-    
-    if (this.elements.alerts.success) {
-        this.elements.alerts.success.style.display = 'none';
-    }
-    if (this.elements.formTabs) {
-        this.elements.formTabs.style.display = 'flex';
-    }
-    if (this.elements.tabContents) {
-        this.elements.tabContents.forEach(content => {
-            content.style.display = 'none';
+    resetForm() {
+        ['inter', 'intra'].forEach(formType => {
+            const form = this.elements.forms[formType];
+            if (form) form.reset();
+            
+            const preview = document.getElementById(`${formType}FilePreview`);
+            const previewContainer = preview?.parentElement;
+            if (preview) {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
+            if (previewContainer) {
+                previewContainer.style.display = 'none';
+            }
+            
+            const fileInput = document.getElementById(`${formType}PaymentProof`);
+            if (fileInput) fileInput.value = '';
+            
+            // Clear the clear button visibility
+            const clearBtn = document.getElementById(`${formType}ClearFile`);
+            if (clearBtn) clearBtn.style.display = 'none';
+            
+            this.state.formData[formType] = {};
         });
+        
+        if (this.elements.alerts.success) {
+            this.elements.alerts.success.style.display = 'none';
+        }
+        if (this.elements.formTabs) {
+            this.elements.formTabs.style.display = 'flex';
+        }
+        if (this.elements.tabContents) {
+            this.elements.tabContents.forEach(content => {
+                content.style.display = 'none';
+            });
+        }
+        
+        this.activateDefaultTab();
+        
+        const submitButtons = document.querySelectorAll('button[type="submit"]');
+        submitButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.innerHTML = 'Submit Registration';
+        });
+        
+        this.scrollToElement(this.elements.container, 600);
     }
-    
-    this.activateDefaultTab();
-    
-    const submitButtons = document.querySelectorAll('button[type="submit"]');
-    submitButtons.forEach(btn => {
-        btn.disabled = false;
-        btn.innerHTML = 'Submit Registration';
-    });
-    
-    this.scrollToElement(this.elements.container, 600);
-}
 
     switchTab(event) {
         const tabId = event.currentTarget.dataset.tab;
@@ -703,63 +726,65 @@ resetForm() {
         window.requestAnimationFrame(scrollStep);
     }
 
-handleCompetitionChange(event) {
-    const form = event.target.closest('form');
-    if (!form) return;
-    
-    const formType = form.id.replace('Form', '');
-    const competitionType = event.target.value;
-    
-    // Hide all payment options first
-    const paymentMethods = form.querySelectorAll('.payment-option');
-    paymentMethods.forEach(method => {
-        method.classList.remove('active');
-    });
-    
-    // Show the relevant payment option based on competition type
-    const methodId = `${formType}${competitionType.replace(/\s+/g, '')}Payment`;
-    const methodElement = document.getElementById(methodId);
-    if (methodElement) methodElement.classList.add('active');
-    
-    // Also update the price display if needed
-    this.updatePriceDisplay(formType, competitionType);
-}
-showAlert(message, type) {
-    const alertBox = this.elements.alerts.box;
-    if (!alertBox) return;
-    
-    // Clear any existing timeout to prevent multiple timeouts running
-    if (this.alertTimeout) {
-        clearTimeout(this.alertTimeout);
-    }
-    
-    // Set the alert content and styling
-    alertBox.innerHTML = `
-        <i class="fas ${type === 'danger' ? 'fa-exclamation-circle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i>
-        <div class="alert-message">${message}</div>
-    `;
-    alertBox.className = `alert alert-${type}`;
-    
-    // Reset animation and show the alert
-    alertBox.style.animation = 'none';
-    alertBox.offsetHeight; // Trigger reflow
-    alertBox.style.display = 'flex';
-    alertBox.style.animation = 'slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
-    
-    this.scrollToElement(alertBox, 300);
-    
-    // Set timeout to hide the alert after 5 seconds
-    this.alertTimeout = setTimeout(() => {
-        // Add fade out animation
-        alertBox.style.animation = 'fadeOut 0.5s ease forwards';
+    handleCompetitionChange(event) {
+        const form = event.target.closest('form');
+        if (!form) return;
         
-        // Wait for animation to complete before hiding
-        setTimeout(() => {
-            alertBox.style.display = 'none';
-            alertBox.style.animation = '';
-        }, 500);
-    }, 3500);
-}
+        const formType = form.id.replace('Form', '');
+        const competitionType = event.target.value;
+        
+        // Hide all payment options first
+        const paymentMethods = form.querySelectorAll('.payment-option');
+        paymentMethods.forEach(method => {
+            method.classList.remove('active');
+        });
+        
+        // Show the relevant payment option based on competition type
+        const methodId = `${formType}${competitionType.replace(/\s+/g, '')}Payment`;
+        const methodElement = document.getElementById(methodId);
+        if (methodElement) methodElement.classList.add('active');
+        
+        // Also update the price display if needed
+        this.updatePriceDisplay(formType, competitionType);
+    }
+
+    showAlert(message, type) {
+        const alertBox = this.elements.alerts.box;
+        if (!alertBox) return;
+        
+        // Clear any existing timeout to prevent multiple timeouts running
+        if (this.alertTimeout) {
+            clearTimeout(this.alertTimeout);
+        }
+        
+        // Set the alert content and styling
+        alertBox.innerHTML = `
+            <i class="fas ${type === 'danger' ? 'fa-exclamation-circle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i>
+            <div class="alert-message">${message}</div>
+        `;
+        alertBox.className = `alert alert-${type}`;
+        
+        // Reset animation and show the alert
+        alertBox.style.animation = 'none';
+        alertBox.offsetHeight; // Trigger reflow
+        alertBox.style.display = 'flex';
+        alertBox.style.animation = 'slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+        
+        this.scrollToElement(alertBox, 300);
+        
+        // Set timeout to hide the alert after 5 seconds
+        this.alertTimeout = setTimeout(() => {
+            // Add fade out animation
+            alertBox.style.animation = 'fadeOut 0.5s ease forwards';
+            
+            // Wait for animation to complete before hiding
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+                alertBox.style.animation = '';
+            }, 500);
+        }, 3500);
+    }
+
     generateReceipt() {
         if (!window.jspdf || !this.elements.alerts.registrationId || !this.state.currentRegistration) {
             this.showAlert('PDF generation library not loaded. Please try again later.', 'danger');
